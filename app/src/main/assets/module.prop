@@ -1,0 +1,6 @@
+id=edgetabredirector
+name=Edge Tab Redirector
+version=1.0
+versionCode=1
+author=ChatGPT
+description=Redirect Edge's chrome-native://newtab/ to chrome://newtab/ to enable custom new tab extensions.
