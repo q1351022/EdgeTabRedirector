@@ -1,4 +1,4 @@
-name: Android CI
+ame: Android CI
 
 on:
 push:
@@ -47,12 +47,14 @@ with:
 name: App-Debug-APK
 path: app/build/outputs/apk/debug/*.apk
 
-# 7. 创建 GitHub Release（仅当有新标签时触发）
+# 7. 创建 GitHub Release（修正第17行）
 - name: Create Release
 if: startsWith(github.ref, 'refs/tags/')
 uses: softprops/action-gh-release@v1
 with:
 files: app/build/outputs/apk/debug/*.apk
-generate_release_notes: true
+tag_name: "v1.0.${{ github.run_number }}" # 修正这里：使用 tag_name 而不是 tag
+name: "Release v1.0.${{ github.run_number }}"
+body: "自动打包生成的 APK。"
 env:
 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
