@@ -1,9 +1,8 @@
-name: Android Build
+name: Android CI
 
 on:
 push:
-branches:
-- main
+branches: [ main ]
 workflow_dispatch:
 
 jobs:
@@ -11,34 +10,49 @@ build:
 runs-on: ubuntu-latest
 
 steps:
+# 1. 检出代码
 - name: Checkout repository
-uses: actions/checkout@v3
+uses: actions/checkout@v4
 
+# 2. 设置 JDK
 - name: Set up JDK 17
 uses: actions/setup-java@v3
 with:
 distribution: 'temurin'
 java-version: '17'
 
-- name: Set up Gradle
-uses: gradle/gradle-build-action@v2
+# 3. 缓存 Gradle 依赖（加速构建）
+- name: Cache Gradle dependencies
+uses: actions/cache@v3
+with:
+path: |
+~/.gradle/caches
+~/.gradle/wrapper
+key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+restore-keys: |
+${{ runner.os }}-gradle-
 
+# 4. 授予 gradlew 执行权限（重要！）
+- name: Make gradlew executable
+run: chmod +x gradlew
+
+# 5. 构建 APK
 - name: Build APK
-run: ./gradlew assembleDebug
+run: ./gradlew assembleDebug --stacktrace
 
+# 6. 上传构建产物
 - name: Upload APK Artifact
 uses: actions/upload-artifact@v3
 with:
-name: EdgeTabRedirector-APK
+name: App-Debug-APK
 path: app/build/outputs/apk/debug/*.apk
 
-- name: Create GitHub Release
-uses: ncipollo/release-action@v1
+# 7. 创建 GitHub Release（仅当有新标签时触发）
+- name: Create Release
+if: startsWith(github.ref, 'refs/tags/')
+uses: softprops/action-gh-release@v1
 with:
-artifacts: app/build/outputs/apk/debug/*.apk
-tag: v1.0.${{ github.run_number }}
-name: Release v1.0.${{ github.run_number }}
-body: |
-自动打包生成的 APK。
+files: app/build/outputs/apk/debug/*.apk
+generate_release_notes: true
 env:
 GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
